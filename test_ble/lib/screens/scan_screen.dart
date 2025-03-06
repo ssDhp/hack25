@@ -5,7 +5,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 import 'device_screen.dart';
 import '../utils/snackbar.dart';
-import '../widgets/system_device_tile.dart';
+// import '../widgets/system_device_tile.dart';
 import '../widgets/scan_result_tile.dart';
 import '../utils/extra.dart';
 
@@ -17,7 +17,7 @@ class ScanScreen extends StatefulWidget {
 }
 
 class _ScanScreenState extends State<ScanScreen> {
-  List<BluetoothDevice> _systemDevices = [];
+  // List<BluetoothDevice> _systemDevices = [];
   List<ScanResult> _scanResults = [];
   bool _isScanning = false;
   late StreamSubscription<List<ScanResult>> _scanResultsSubscription;
@@ -30,6 +30,7 @@ class _ScanScreenState extends State<ScanScreen> {
     _scanResultsSubscription = FlutterBluePlus.scanResults.listen(
       (results) {
         _scanResults = results;
+        print(_scanResults);
         if (mounted) {
           setState(() {});
         }
@@ -55,27 +56,23 @@ class _ScanScreenState extends State<ScanScreen> {
   }
 
   Future onScanPressed() async {
-    try {
-      // `withServices` is required on iOS for privacy purposes, ignored on android.
-      var withServices = [Guid("180f")]; // Battery Level Service
-      _systemDevices = await FlutterBluePlus.systemDevices(withServices);
-    } catch (e, backtrace) {
-      Snackbar.show(
-        ABC.b,
-        prettyException("System Devices Error:", e),
-        success: false,
-      );
-      print(e);
-      print("backtrace: $backtrace");
-    }
+    // try {
+    //   // `withServices` is required on iOS for privacy purposes, ignored on android.
+    //   // var withServices = [Guid("180f")]; // Battery Level Service
+    //   _systemDevices = await FlutterBluePlus.systemDevices(List.empty());
+    // } catch (e, backtrace) {
+    //   Snackbar.show(
+    //     ABC.b,
+    //     prettyException("System Devices Error:", e),
+    //     success: false,
+    //   );
+    //   print(e);
+    //   print("backtrace: $backtrace");
+    // }
     try {
       await FlutterBluePlus.startScan(
-        timeout: const Duration(seconds: 15),
-        // webOptionalServices: [
-        //   Guid("180f"), // battery
-        //   Guid("1800"), // generic access
-        //   Guid("6e400001-b5a3-f393-e0a9-e50e24dcca9e"), // Nordic UART
-        // ],
+        timeout: const Duration(seconds: 30),
+        withServices: [Guid("19b10000-e8f2-537e-4f6c-d104768a1214")],
       );
     } catch (e, backtrace) {
       Snackbar.show(
@@ -133,35 +130,35 @@ class _ScanScreenState extends State<ScanScreen> {
   Widget buildScanButton(BuildContext context) {
     if (FlutterBluePlus.isScanningNow) {
       return FloatingActionButton(
-        child: const Icon(Icons.stop),
         onPressed: onStopPressed,
         backgroundColor: Colors.red,
+        child: const Icon(Icons.stop),
       );
     } else {
       return FloatingActionButton(
-        child: const Text("SCAN"),
         onPressed: onScanPressed,
+        child: const Text("SCAN"),
       );
     }
   }
 
-  List<Widget> _buildSystemDeviceTiles(BuildContext context) {
-    return _systemDevices
-        .map(
-          (d) => SystemDeviceTile(
-            device: d,
-            onOpen:
-                () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => DeviceScreen(device: d),
-                    settings: RouteSettings(name: '/DeviceScreen'),
-                  ),
-                ),
-            onConnect: () => onConnectPressed(d),
-          ),
-        )
-        .toList();
-  }
+  // List<Widget> _buildSystemDeviceTiles(BuildContext context) {
+  //   return _systemDevices
+  //       .map(
+  //         (d) => SystemDeviceTile(
+  //           device: d,
+  //           onOpen:
+  //               () => Navigator.of(context).push(
+  //                 MaterialPageRoute(
+  //                   builder: (context) => DeviceScreen(device: d),
+  //                   settings: RouteSettings(name: '/DeviceScreen'),
+  //                 ),
+  //               ),
+  //           onConnect: () => onConnectPressed(d),
+  //         ),
+  //       )
+  //       .toList();
+  // }
 
   List<Widget> _buildScanResultTiles(BuildContext context) {
     return _scanResults
@@ -184,7 +181,7 @@ class _ScanScreenState extends State<ScanScreen> {
           onRefresh: onRefresh,
           child: ListView(
             children: <Widget>[
-              ..._buildSystemDeviceTiles(context),
+              // ..._buildSystemDeviceTiles(context),
               ..._buildScanResultTiles(context),
             ],
           ),

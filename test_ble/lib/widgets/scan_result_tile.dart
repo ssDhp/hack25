@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 class ScanResultTile extends StatefulWidget {
-  const ScanResultTile({Key? key, required this.result, this.onTap}) : super(key: key);
+  const ScanResultTile({Key? key, required this.result, this.onTap})
+    : super(key: key);
 
   final ScanResult result;
   final VoidCallback? onTap;
@@ -14,15 +16,19 @@ class ScanResultTile extends StatefulWidget {
 }
 
 class _ScanResultTileState extends State<ScanResultTile> {
-  BluetoothConnectionState _connectionState = BluetoothConnectionState.disconnected;
+  BluetoothConnectionState _connectionState =
+      BluetoothConnectionState.disconnected;
 
-  late StreamSubscription<BluetoothConnectionState> _connectionStateSubscription;
+  late StreamSubscription<BluetoothConnectionState>
+  _connectionStateSubscription;
 
   @override
   void initState() {
     super.initState();
 
-    _connectionStateSubscription = widget.result.device.connectionState.listen((state) {
+    _connectionStateSubscription = widget.result.device.connectionState.listen((
+      state,
+    ) {
       _connectionState = state;
       if (mounted) {
         setState(() {});
@@ -41,11 +47,17 @@ class _ScanResultTileState extends State<ScanResultTile> {
   }
 
   String getNiceManufacturerData(List<List<int>> data) {
-    return data.map((val) => '${getNiceHexArray(val)}').join(', ').toUpperCase();
+    return data
+        .map((val) => '${getNiceHexArray(val)}')
+        .join(', ')
+        .toUpperCase();
   }
 
   String getNiceServiceData(Map<Guid, List<int>> data) {
-    return data.entries.map((v) => '${v.key}: ${getNiceHexArray(v.value)}').join(', ').toUpperCase();
+    return data.entries
+        .map((v) => '${v.key}: ${getNiceHexArray(v.value)}')
+        .join(', ')
+        .toUpperCase();
   }
 
   String getNiceServiceUuids(List<Guid> serviceUuids) {
@@ -69,7 +81,7 @@ class _ScanResultTileState extends State<ScanResultTile> {
           Text(
             widget.result.device.remoteId.str,
             style: Theme.of(context).textTheme.bodySmall,
-          )
+          ),
         ],
       );
     } else {
@@ -84,7 +96,8 @@ class _ScanResultTileState extends State<ScanResultTile> {
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
       ),
-      onPressed: (widget.result.advertisementData.connectable) ? widget.onTap : null,
+      onPressed:
+          (widget.result.advertisementData.connectable) ? widget.onTap : null,
     );
   }
 
@@ -95,13 +108,13 @@ class _ScanResultTileState extends State<ScanResultTile> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(title, style: Theme.of(context).textTheme.bodySmall),
-          const SizedBox(
-            width: 12.0,
-          ),
+          const SizedBox(width: 12.0),
           Expanded(
             child: Text(
               value,
-              style: Theme.of(context).textTheme.bodySmall?.apply(color: Colors.black),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.apply(color: Colors.black),
               softWrap: true,
             ),
           ),
@@ -113,17 +126,49 @@ class _ScanResultTileState extends State<ScanResultTile> {
   @override
   Widget build(BuildContext context) {
     var adv = widget.result.advertisementData;
+    int RSSI = widget.result.rssi;
+    int measuredPower = -69;
+    int N = 2;
+    double calcDistanceInMeters =
+        pow(10, ((measuredPower - RSSI) / (10 * N))).toDouble();
+
+    print(widget.result.advertisementData);
+    print(widget.result.device);
+    print(widget.result.rssi);
+    print(widget.result.timeStamp);
     return ExpansionTile(
       title: _buildTitle(context),
-      leading: Text(widget.result.rssi.toString()),
-      trailing: _buildConnectButton(context),
+      // leading: Text(widget.result.rssi.toString()),
+      trailing: Text("${calcDistanceInMeters.toString()} m"),
+      // trailing: _buildConnectButton(context),
       children: <Widget>[
         if (adv.advName.isNotEmpty) _buildAdvRow(context, 'Name', adv.advName),
-        if (adv.txPowerLevel != null) _buildAdvRow(context, 'Tx Power Level', '${adv.txPowerLevel}'),
-        if ((adv.appearance ?? 0) > 0) _buildAdvRow(context, 'Appearance', '0x${adv.appearance!.toRadixString(16)}'),
-        if (adv.msd.isNotEmpty) _buildAdvRow(context, 'Manufacturer Data', getNiceManufacturerData(adv.msd)),
-        if (adv.serviceUuids.isNotEmpty) _buildAdvRow(context, 'Service UUIDs', getNiceServiceUuids(adv.serviceUuids)),
-        if (adv.serviceData.isNotEmpty) _buildAdvRow(context, 'Service Data', getNiceServiceData(adv.serviceData)),
+        if (adv.txPowerLevel != null)
+          _buildAdvRow(context, 'Tx Power Level', '${adv.txPowerLevel}'),
+        if ((adv.appearance ?? 0) > 0)
+          _buildAdvRow(
+            context,
+            'Appearance',
+            '0x${adv.appearance!.toRadixString(16)}',
+          ),
+        if (adv.msd.isNotEmpty)
+          _buildAdvRow(
+            context,
+            'Manufacturer Data',
+            getNiceManufacturerData(adv.msd),
+          ),
+        if (adv.serviceUuids.isNotEmpty)
+          _buildAdvRow(
+            context,
+            'Service UUIDs',
+            getNiceServiceUuids(adv.serviceUuids),
+          ),
+        if (adv.serviceData.isNotEmpty)
+          _buildAdvRow(
+            context,
+            'Service Data',
+            getNiceServiceData(adv.serviceData),
+          ),
       ],
     );
   }
